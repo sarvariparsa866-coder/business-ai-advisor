@@ -1,0 +1,36 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get project
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract Android project
+        run: unzip -q BusinessAIAdvisor_Android_MVP.zip
+
+      - name: Build APK
+        working-directory: BusinessAIAdvisor_Android
+        run: gradle assembleDebug --no-daemon
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BusinessAIAdvisor-APK
+          path: BusinessAIAdvisor_Android/app/build/outputs/apk/debug/app-debug.apk
