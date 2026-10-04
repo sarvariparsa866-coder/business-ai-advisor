@@ -1,56 +1,295 @@
-name: Build APK
+package com.businessai.advisor
 
-on:
-  workflow_dispatch:
+import android.app.Activity
+import android.os.Bundle
+import android.graphics.Color
+import android.view.Gravity
+import android.view.View
+import android.widget.*
+import android.graphics.drawable.GradientDrawable
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+data class Question(
+    val text: String,
+    val answers: List<String>
+)
 
-    steps:
-      - name: Get project
-        uses: actions/checkout@v4
+class MainActivity : Activity() {
 
-      - name: Install Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
+    private lateinit var root: LinearLayout
+    private var index = 0
+    private val answers = mutableListOf<String>()
 
-      - name: Install Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+    private val questions = listOf(
+        Question(
+            "هدف اصلی تو از این مشاوره چیست؟",
+            listOf(
+                "راه‌اندازی کسب‌وکار جدید",
+                "رشد کسب‌وکار فعلی",
+                "پیدا کردن درآمد جانبی",
+                "هنوز مطمئن نیستم"
+            )
+        ),
+        Question(
+            "تقریباً چقدر سرمایه برای شروع داری؟",
+            listOf(
+                "تقریباً صفر",
+                "کمتر از ۱۰ میلیون تومان",
+                "۱۰ تا ۱۰۰ میلیون تومان",
+                "بیشتر از ۱۰۰ میلیون تومان"
+            )
+        ),
+        Question(
+            "کدام مورد به مهارت‌های تو نزدیک‌تر است؟",
+            listOf(
+                "فروش و ارتباط با مشتری",
+                "فنی و تکنولوژی",
+                "تولید محتوا و بازاریابی",
+                "مدیریت و کار اجرایی"
+            )
+        ),
+        Question(
+            "چقدر زمان می‌توانی در روز اختصاص بدهی؟",
+            listOf(
+                "کمتر از ۲ ساعت",
+                "۲ تا ۴ ساعت",
+                "۴ تا ۸ ساعت",
+                "تمام‌وقت"
+            )
+        ),
+        Question(
+            "کدام مدل را بیشتر می‌پسندی؟",
+            listOf(
+                "کاملاً آنلاین",
+                "حضوری",
+                "ترکیبی",
+                "فرقی ندارد"
+            )
+        ),
+        Question(
+            "میزان ریسک‌پذیری تو چقدر است؟",
+            listOf(
+                "خیلی کم",
+                "متوسط",
+                "زیاد",
+                "اگر فرصت خوب باشد، زیاد"
+            )
+        )
+    )
 
-      - name: Extract project
-        run: unzip -o BusinessAIAdvisor_Android_MVP.zip
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        showHome()
+    }
 
-      - name: Fix Java and Kotlin settings
-        working-directory: BusinessAIAdvisor_Android
-        run: |
-          python3 - <<'PY'
-          p = "app/build.gradle.kts"
-          s = open(p).read()
-          s = s.replace(
-              '    targetSdk = 35\n',
-              '    targetSdk = 35\n'
-              '    compileOptions {\n'
-              '        sourceCompatibility = JavaVersion.VERSION_17\n'
-              '        targetCompatibility = JavaVersion.VERSION_17\n'
-              '    }\n'
-              '    kotlinOptions {\n'
-              '        jvmTarget = "17"\n'
-              '    }\n'
-          )
-          open(p, "w").write(s)
-          PY
+    private fun base(): LinearLayout {
+        root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(44, 48, 44, 32)
+            setBackgroundColor(Color.WHITE)
+        }
 
-      - name: Build APK
-        working-directory: BusinessAIAdvisor_Android
-        run: gradle assembleDebug --no-daemon
+        setContentView(root)
+        return root
+    }
 
-      - name: Save APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BusinessAIAdvisor-APK
-          path: BusinessAIAdvisor_Android/app/build/outputs/apk/debug/app-debug.apk
+    private fun text(
+        s: String,
+        size: Float,
+        bold: Boolean = false
+    ): TextView {
+
+        return TextView(this).apply {
+            text = s
+            textSize = size
+            setTextColor(Color.rgb(23, 32, 42))
+
+            if (bold) {
+                setTypeface(null, 1)
+            }
+
+            gravity = Gravity.RIGHT
+            setPadding(0, 8, 0, 8)
+        }
+    }
+
+    private fun button(
+        s: String,
+        onClick: () -> Unit
+    ): Button {
+
+        return Button(this).apply {
+            text = s
+            textSize = 16f
+            setTextColor(Color.WHITE)
+
+            backgroundResource =
+                com.businessai.advisor.R.drawable.button_bg
+
+            setOnClickListener {
+                onClick()
+            }
+
+            layoutParams = LinearLayout.LayoutParams(
+                -1,
+                60
+            ).apply {
+                topMargin = 14
+            }
+        }
+    }
+
+    private fun showHome() {
+
+        val r = base()
+
+        val logo = text(
+            "BA",
+            24f,
+            true
+        )
+
+        logo.gravity = Gravity.CENTER
+        logo.setTextColor(Color.WHITE)
+        logo.setBackgroundColor(
+            Color.rgb(17, 24, 39)
+        )
+
+        r.addView(
+            logo,
+            LinearLayout.LayoutParams(
+                130,
+                130
+            ).apply {
+                bottomMargin = 28
+            }
+        )
+
+        r.addView(
+            text(
+                "مشاور کسب‌وکار AI",
+                30f,
+                true
+            )
+        )
+
+        r.addView(
+            text(
+                "چند سؤال هوشمندانه از تو می‌پرسیم، " +
+                "شرایطت را تحلیل می‌کنیم و در پایان " +
+                "یک مسیر کسب‌وکار متناسب با تو می‌سازیم.",
+                17f
+            )
+        )
+
+        val space = Space(this)
+
+        r.addView(
+            space,
+            LinearLayout.LayoutParams(
+                1,
+                0,
+                1f
+            )
+        )
+
+        r.addView(
+            button("شروع مشاوره") {
+                showQuestion()
+            }
+        )
+    }
+
+    private fun showQuestion() {
+
+        val r = base()
+
+        r.addView(
+            text(
+                "سؤال ${index + 1} از ${questions.size}",
+                14f
+            )
+        )
+
+        val bar = ProgressBar(
+            this,
+            null,
+            android.R.attr.progressBarStyleHorizontal
+        )
+
+        bar.max = 100
+        bar.progress =
+            (index * 100 / questions.size)
+
+        r.addView(
+            bar,
+            LinearLayout.LayoutParams(
+                -1,
+                10
+            ).apply {
+                bottomMargin = 24
+            }
+        )
+
+        r.addView(
+            text(
+                questions[index].text,
+                24f,
+                true
+            )
+        )
+
+        val group = RadioGroup(this)
+
+        group.orientation =
+            RadioGroup.VERTICAL
+
+        questions[index].answers.forEach { answer ->
+
+            val rb = RadioButton(this).apply {
+                text = answer
+                textSize = 16f
+                setPadding(
+                    10,
+                    20,
+                    10,
+                    20
+                )
+            }
+
+            group.addView(rb)
+        }
+
+        r.addView(group)
+
+        val space = Space(this)
+
+        r.addView(
+            space,
+            LinearLayout.LayoutParams(
+                1,
+                0,
+                1f
+            )
+        )
+
+        val next = button(
+            if (index == questions.lastIndex)
+                "ساخت پیشنهاد"
+            else
+                "ادامه"
+        ) {}
+
+        next.setOnClickListener {
+
+            val checked =
+                group.checkedRadioButtonId
+
+            if (checked == -1) {
+
+                Toast.makeText(
+                    this,
+                    "یک گزینه را انتخاب کن",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClick
